@@ -9,5 +9,6 @@ The goal is to build some discipline around coding, cause right now I'm pretty i
 Currently I just have this script referenced in my `.zshrc` so that I can run `loc` in my terminal and then see what I've done that day/week.
 
 #### TODO (maybe):
-- Add a UI with charts
 - Count LOC changed across ALL directories
+- Add more advanced analytics
+- Add a UI with charts
