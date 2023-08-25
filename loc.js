@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const { execSync } = require('child_process');
 
 function getUnixTimestampsForLastXDays(num) { 
@@ -43,16 +44,24 @@ function formatDateToHumanReadable(date) {
 }
 
 function getLinesChanged(startTime, endTime) { 
-  let directory = "/Users/hack/Local/internetfriends-run"
-  let gitHistory = `git log --since=\"@${startTime}\" --until=\"@${endTime}\" --shortstat --pretty=format:\"\" | awk '{added+=$4; deleted+=$6} END {print \"{\\\"added\\\": \" added \", \\\"deleted\\\": \" deleted \" }\"}'`
+  let directory = process.cwd()
+  let authorName = "Alex Reyes"
+  // Get lines added + deleted across ALL branches for a specific author (me) within a time range
+  let gitHistory = `git log --all --since=\"@${startTime}\" --until=\"@${endTime}\" --author=\"${authorName}\" --shortstat --pretty=format:\"\" | awk '{added+=$4; deleted+=$6} END {print \"{\\\"added\\\": \" added \", \\\"deleted\\\": \" deleted \" }\"}'`
+
   let output = execSync(`cd ${directory} && ${gitHistory}`)
-  
-  return JSON.parse(output.toString())
+
+  try {
+    return JSON.parse(output.toString())
+  } catch { 
+    return false
+  }
 }
+
 let validTimestamps = getUnixTimestampsForLastXDays(7)
 
 if (validTimestamps.length == 0) { 
-  console.log("EMpty!")
+  console.log("Empty!")
 }
 else if (validTimestamps.length == 1) { 
   console.log("HANDLE THIS EDGE CASE LATER!")
@@ -69,11 +78,17 @@ else if (validTimestamps.length == 1) {
     console.log(divider)
     console.log(range + ':', end='\n')
 
-    const { added, deleted } = getLinesChanged(validTimestamps[pointer], validTimestamps[pointer1])
-
-    console.log("Added: ", added)
-    console.log("Deleted: ", deleted)
-    console.log("Total: ", added + deleted)
+    let output = getLinesChanged(validTimestamps[pointer], validTimestamps[pointer1])
+    
+    if (!output) { 
+      console.log("No commits on this day\n")
+    } else { 
+      const { added, deleted } = output
+      
+      console.log("Added: ", added)
+      console.log("Deleted: ", deleted)
+      console.log("Total: ", added + deleted)
+    }
 
     pointer++;
     pointer1++;
