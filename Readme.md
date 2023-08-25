@@ -12,3 +12,4 @@ Currently I just have this script referenced in my `.zshrc` so that I can run `l
 - Count LOC changed across ALL directories
 - Add more advanced analytics
 - Add a UI with charts
+- Ignore certain files/folders (i.e. `pods/` and `package-lock.json`, etc)
