@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 const { execSync } = require('child_process');
 
+// Filter diffs by name
+const AUTHOR_NAME = "Alex Reyes"
+
+// Helper function get unix timestamps for midnight in the last 7 days
 function getUnixTimestampsForLastXDays(num) { 
   var timestamps = [];
 
@@ -23,6 +27,7 @@ function convertUnixTimestampToDate(unixTimestamp) {
   return new Date(unixTimestamp * 1000);
 }
 
+// Function to get a JS date and convert to this format: Tuesday, August 22nd
 function formatDateToHumanReadable(date) {
   const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -43,13 +48,15 @@ function formatDateToHumanReadable(date) {
   return `${dayOfWeek}, ${monthName} ${dayOfMonth}${suffix}`;
 }
 
+// startTime + endTime are unix timestamps
 function getLinesChanged(startTime, endTime) { 
-  let directory = process.cwd()
-  let authorName = "Alex Reyes"
-  // Get lines added + deleted across ALL branches for a specific author (me) within a time range
-  let gitHistory = `git log --all --since=\"@${startTime}\" --until=\"@${endTime}\" --author=\"${authorName}\" --shortstat --pretty=format:\"\" | awk '{added+=$4; deleted+=$6} END {print \"{\\\"added\\\": \" added \", \\\"deleted\\\": \" deleted \" }\"}'`
+  let currDir = process.cwd()
 
-  let output = execSync(`cd ${directory} && ${gitHistory}`)
+  // Get lines added + deleted across ALL branches for a specific author (me) within a time range
+  let gitLinesChangedCommand = `git log --all --since=\"@${startTime}\" --until=\"@${endTime}\" --author=\"${AUTHOR_NAME}\" --shortstat --pretty=format:\"\" | awk '{added+=$4; deleted+=$6} END {print \"{\\\"added\\\": \" added \", \\\"deleted\\\": \" deleted \" }\"}'`
+
+  // Returns a string like: {"added": 47, "deleted": 10 }
+  let output = execSync(`cd ${currDir} && ${gitLinesChangedCommand}`)
 
   try {
     return JSON.parse(output.toString())
@@ -58,39 +65,38 @@ function getLinesChanged(startTime, endTime) {
   }
 }
 
-let validTimestamps = getUnixTimestampsForLastXDays(7)
+function main() { 
+  let lastWeekInUnixTimestamps = getUnixTimestampsForLastXDays(7)
 
-if (validTimestamps.length == 0) { 
-  console.log("Empty!")
-}
-else if (validTimestamps.length == 1) { 
-  console.log("HANDLE THIS EDGE CASE LATER!")
-} else { 
   var pointer = 0
   var pointer1 = 1
 
-  while (pointer1 <= validTimestamps.length) { 
-    let item = formatDateToHumanReadable(convertUnixTimestampToDate(validTimestamps[pointer]))
+  // Need to get the ranges to calculate the loc changed
+  // Use two pointers to loop through the array 2 items at a time. Item 1 is the starting time, item 2 is the ending time
+  while (pointer1 <= lastWeekInUnixTimestamps.length) { 
+    let humanReadableDate = formatDateToHumanReadable(convertUnixTimestampToDate(lastWeekInUnixTimestamps[pointer]))
 
-    let range = `${item}`
+    console.log('='.repeat(24))
+    console.log(`${humanReadableDate}:\n`)
 
-    let divider = '='.repeat(24)
-    console.log(divider)
-    console.log(range + ':', end='\n')
+    const startTime = lastWeekInUnixTimestamps[pointer]
+    const endTime = lastWeekInUnixTimestamps[pointer1]
 
-    let output = getLinesChanged(validTimestamps[pointer], validTimestamps[pointer1])
+    let linesChangedObj = getLinesChanged(startTime, endTime)
     
-    if (!output) { 
+    if (!linesChangedObj) { 
       console.log("No commits on this day\n")
     } else { 
-      const { added, deleted } = output
+      const { added, deleted } = linesChangedObj
       
-      console.log("Added: ", added)
-      console.log("Deleted: ", deleted)
-      console.log("Total: ", added + deleted)
+      console.log(`Added: ${added}`)
+      console.log(`Deleted: ${deleted}`)
+      console.log(`Total: ${added + deleted}\n`)
     }
 
     pointer++;
     pointer1++;
   }
 }
+
+main()
