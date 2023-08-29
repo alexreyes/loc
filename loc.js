@@ -67,7 +67,7 @@ function getLinesChanged(startTime, endTime) {
 }
 
 function main() { 
-  let lastWeekInUnixTimestamps = getUnixTimestampsForLastXDays(7)
+  let lastWeekInUnixTimestamps = getUnixTimestampsForLastXDays(8)
 
   var pointer = 0
   var pointer1 = 1
