@@ -3,6 +3,7 @@ const { execSync } = require('child_process');
 
 // Filter diffs by name
 const AUTHOR_NAME = "Alex Reyes"
+const BUILDBOT_AUTHOR_NAME = "buildbot"
 
 // Helper function get unix timestamps for midnight in the last 7 days
 function getUnixTimestampsForLastXDays(num) { 
@@ -53,7 +54,7 @@ function getLinesChanged(startTime, endTime) {
   let currDir = process.cwd()
 
   // Get lines added + deleted across ALL branches for a specific author (me) within a time range
-  let gitLinesChangedCommand = `git log --all --since=\"@${startTime}\" --until=\"@${endTime}\" --author=\"${AUTHOR_NAME}\" --shortstat --pretty=format:\"\" | awk '{added+=$4; deleted+=$6} END {print \"{\\\"added\\\": \" added \", \\\"deleted\\\": \" deleted \" }\"}'`
+  let gitLinesChangedCommand = `git log --all --since=\"@${startTime}\" --until=\"@${endTime}\" --author=\"${AUTHOR_NAME}\" --author=\"${BUILDBOT_AUTHOR_NAME}\" --shortstat --pretty=format:\"\" | awk '{added+=$4; deleted+=$6} END {print \"{\\\"added\\\": \" added \", \\\"deleted\\\": \" deleted \" }\"}'`
 
   // Returns a string like: {"added": 47, "deleted": 10 }
   let output = execSync(`cd ${currDir} && ${gitLinesChangedCommand}`)
